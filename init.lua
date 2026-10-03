@@ -52,12 +52,19 @@ for _, k in ipairs { 'h', 'j', 'k', 'l' } do
   map('n', '<C-' .. k .. '>', '<C-w>' .. k, { desc = 'Window ' .. k })
 end
 
--- Completion menu: Tab/S-Tab move (Enter is mapped with mini.pairs, plugin/30-mini.lua).
-local pum = function(yes, no)
-  return function() return vim.fn.pumvisible() == 1 and yes or no end
+-- Tab/S-Tab: move in the completion menu, else jump between snippet fields, else a real Tab.
+-- (Enter is mapped with mini.pairs, plugin/30-mini.lua.)
+local function tab(pum_key, dir, fallback)
+  return function()
+    if vim.fn.pumvisible() == 1 then return pum_key end
+    if vim.snippet.active({ direction = dir }) then
+      return string.format('<Cmd>lua vim.snippet.jump(%d)<CR>', dir)
+    end
+    return fallback
+  end
 end
-map('i', '<Tab>', pum('<C-n>', '<Tab>'), { expr = true, desc = 'Next completion' })
-map('i', '<S-Tab>', pum('<C-p>', '<S-Tab>'), { expr = true, desc = 'Previous completion' })
+map({ 'i', 's' }, '<Tab>', tab('<C-n>', 1, '<Tab>'), { expr = true, desc = 'Next completion / snippet field' })
+map({ 'i', 's' }, '<S-Tab>', tab('<C-p>', -1, '<S-Tab>'), { expr = true, desc = 'Previous completion / snippet field' })
 
 -- [[ Autocommands ]]
 vim.api.nvim_create_autocmd('TextYankPost', {
