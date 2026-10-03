@@ -10,6 +10,7 @@ readonly REPO
 readonly TARGET="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
 DRY=0
 BACKUP=0
+YES=()
 
 # command on PATH = package that provides it. Only missing commands are installed, so
 # -git / -bin variants you already have are never replaced.
@@ -48,7 +49,8 @@ Commands:
   all    deps, then link
 
 Options:
-  --backup      link: move an existing config aside instead of stopping
+  --backup       link: move an existing config aside instead of stopping
+  -y, --yes      deps: install without asking (--noconfirm)
   -n, --dry-run  print what would run, change nothing
   -h, --help     show this help
   -V, --version  print version and exit
@@ -84,12 +86,12 @@ install_deps() {
     pkgs+=("${aur_pkgs[@]}")
     (( ${#pkgs[@]} )) || { log "deps: nothing missing"; return 0; }
     log "$(basename "$helper"): ${pkgs[*]}"
-    run "$helper" -S --needed "${pkgs[@]}"
+    run "$helper" -S --needed "${YES[@]}" "${pkgs[@]}"
     return 0
   fi
   if (( ${#pkgs[@]} )); then
     log "pacman: ${pkgs[*]}"
-    run sudo pacman -S --needed "${pkgs[@]}"
+    run sudo pacman -S --needed "${YES[@]}" "${pkgs[@]}"
   fi
   (( ${#aur_pkgs[@]} )) && log "AUR, install with your helper: ${aur_pkgs[*]}"
   return 0
@@ -120,6 +122,7 @@ main() {
       -V|--version) echo "${SCRIPT}  v${VERSION}"; exit 0 ;;
       -n|--dry-run) DRY=1 ;;
       --backup)     BACKUP=1 ;;
+      -y|--yes)     YES=(--noconfirm) ;;
       deps|link|all) cmd="$a" ;;
       *)            err "unknown argument: $a"; usage >&2; exit 2 ;;
     esac

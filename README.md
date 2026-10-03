@@ -1,7 +1,8 @@
 # ansulev-neovim
 
 A small Neovim 0.12 IDE config. Native first: `vim.pack` for plugins, `vim.lsp.config` for
-language servers, built-in autocomplete for completion. Six plugin repos, no Mason, no distro.
+language servers, built-in autocomplete for completion. It pulls in six plugin repos and needs
+neither Mason nor a distro.
 
 Inspired by Chris Titus's [Neovim setup](https://github.com/ChrisTitusTech/neovim), cut down further:
 mini.nvim replaces snacks, which-key, bufferline, oil, gitsigns and trouble; Neovim's own
@@ -9,7 +10,7 @@ autocomplete replaces blink.cmp; the system package manager replaces Mason.
 
 ## Requirements
 
-- Neovim **0.12+**, git, ripgrep, fd, `tree-sitter` CLI (0.26.1+), a C compiler
+- Neovim 0.12 or newer, git, ripgrep, fd, `tree-sitter` CLI (0.26.1+), a C compiler
 - A clipboard tool: `xclip` (X11) or `wl-clipboard` (Wayland)
 - Language servers you want (each one is enabled only when its binary is on PATH)
 
@@ -19,7 +20,7 @@ autocomplete replaces blink.cmp; the system package manager replaces Mason.
 git clone https://github.com/ansulev/ansulev-neovim ~/Projects/ansulev-neovim
 cd ~/Projects/ansulev-neovim
 ./install.sh all --dry-run   # see what it would do
-./install.sh all --backup    # missing tools via yay/paru, then link ~/.config/nvim
+./install.sh all --backup    # missing tools via yay/paru, then link ~/.config/nvim (-y: no prompts)
 nvim                         # plugins and parsers install on first launch
 ```
 
@@ -70,7 +71,7 @@ metrics off). Semgrep has no language server, so it runs on demand.
 |---|---|---|
 | `local_llm` (default) | llama.cpp at `http://127.0.0.1:8008` | a running `llama-server`; set `NVIM_AI_URL` / `NVIM_AI_MODEL` to change it |
 | `grok` | Grok CLI over ACP | `grok login` once |
-| `claude_code` | Claude subscription over ACP | `claude-agent-acp` (AUR) and a signed-in `claude`; it reuses that login, no token to export |
+| `claude_code` | Claude subscription over ACP | `claude-agent-acp` (AUR) and a signed-in `claude`, whose login it reuses |
 
 Chat, inline and command prompts all start on the local model. A cloud adapter runs only when
 you pick it. Keep client or personal data on `local_llm`.
