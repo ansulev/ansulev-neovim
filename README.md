@@ -16,19 +16,21 @@ autocomplete replaces blink.cmp; the system package manager replaces Mason.
 
 ## Install (Arch Linux)
 
+The repo is the config, so clone it straight into `~/.config/nvim`. Move an existing config
+aside first.
+
 ```bash
-git clone https://github.com/ansulev/ansulev-neovim ~/Projects/ansulev-neovim
-cd ~/Projects/ansulev-neovim
-./install.sh all --dry-run   # see what it would do
-./install.sh all --backup    # missing tools via yay/paru, then link ~/.config/nvim (-y: no prompts)
-nvim                         # plugins and parsers install on first launch
+mv ~/.config/nvim ~/.config/nvim.bak      # only if you already have one
+git clone https://github.com/ansulev/ansulev-neovim ~/.config/nvim
+~/.config/nvim/install.sh deps --dry-run  # see what it would install
+~/.config/nvim/install.sh deps            # missing tools via yay/paru (-y: no prompts)
+nvim                                      # plugins and parsers install on first launch
 ```
 
 Only tools missing from PATH are installed, so `-git`/`-bin` variants you already have stay.
 Without yay or paru, pacman installs the repo packages and the AUR ones are listed for you.
-`link` refuses to touch an existing `~/.config/nvim`; `--backup` moves it aside first.
-On other distros, install the tools below with your package manager and symlink the repo to
-`~/.config/nvim`.
+On other distros, clone the same way and install the tools below with your package manager.
+Update with `git -C ~/.config/nvim pull`.
 
 ## What is in it
 

@@ -1,5 +1,6 @@
 #!/bin/bash
-# install.sh — install ansulev-neovim: system tools (Arch) and the ~/.config/nvim link
+# install.sh — install the system tools ansulev-neovim needs (Arch). The repo itself is the
+# config: clone it into ~/.config/nvim, no link.
 set -euo pipefail
 
 readonly VERSION="0.1"
@@ -9,7 +10,6 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO
 readonly TARGET="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
 DRY=0
-BACKUP=0
 YES=()
 
 # command on PATH = package that provides it. Only missing commands are installed, so
@@ -30,7 +30,6 @@ readonly AUR_PKGS=(
 
 log()  { echo "[$(date '+%H:%M:%S')] $*"; }
 err()  { echo "[ERROR] $*" >&2; }
-die()  { err "$*"; exit 1; }
 run()  { if (( DRY )); then echo "  [dry-run] $*"; else "$@"; fi; }
 
 usage() {
@@ -41,24 +40,20 @@ usage() {
 ──────────────────────────────────────────────────
 
 Usage:
-  ./${SCRIPT} <deps|link|all> [OPTIONS]
+  ./${SCRIPT} deps [OPTIONS]
 
 Commands:
   deps   install missing tools: yay/paru (repo + AUR), else pacman (repo only)
-  link   point ${TARGET/#$HOME/\~} at this repo
-  all    deps, then link
 
 Options:
-  --backup       link: move an existing config aside instead of stopping
-  -y, --yes      deps: install without asking (--noconfirm)
+  -y, --yes      install without asking (--noconfirm)
   -n, --dry-run  print what would run, change nothing
   -h, --help     show this help
   -V, --version  print version and exit
 
 Examples:
-  ./${SCRIPT} all --dry-run
-  ./${SCRIPT} all --backup
-  ./${SCRIPT} link --backup
+  ./${SCRIPT} deps --dry-run
+  ./${SCRIPT} deps -y
 EOF
 }
 
@@ -97,20 +92,11 @@ install_deps() {
   return 0
 }
 
-link_config() {
-  if [[ -L "$TARGET" && "$(readlink -f "$TARGET")" == "$REPO" ]]; then
-    log "link: ${TARGET} already points here"; return 0
-  fi
-  if [[ -e "$TARGET" || -L "$TARGET" ]]; then
-    (( BACKUP )) || die "${TARGET} exists. Re-run with --backup to move it aside."
-    local aside
-    aside="${TARGET}.backup-$(date '+%Y%m%d-%H%M%S')"
-    log "link: moving ${TARGET} -> ${aside}"
-    run mv -- "$TARGET" "$aside"
-  fi
-  run mkdir -p -- "$(dirname "$TARGET")"
-  run ln -s -- "$REPO" "$TARGET"
-  log "link: ${TARGET} -> ${REPO}. Start nvim; plugins install on first launch."
+# nvim only reads ${TARGET}; a clone anywhere else is never loaded.
+check_location() {
+  [[ "$REPO" == "$(realpath -m "$TARGET")" ]] && return 0
+  err "this clone is at ${REPO}, but nvim reads ${TARGET}."
+  err "clone it there instead: git clone https://github.com/ansulev/ansulev-neovim ${TARGET}"
 }
 
 main() {
@@ -121,16 +107,13 @@ main() {
       -h|--help)    usage; exit 0 ;;
       -V|--version) echo "${SCRIPT}  v${VERSION}"; exit 0 ;;
       -n|--dry-run) DRY=1 ;;
-      --backup)     BACKUP=1 ;;
       -y|--yes)     YES=(--noconfirm) ;;
-      deps|link|all) cmd="$a" ;;
+      deps)         cmd="$a" ;;
       *)            err "unknown argument: $a"; usage >&2; exit 2 ;;
     esac
   done
   case "$cmd" in
-    deps) install_deps ;;
-    link) link_config ;;
-    all)  install_deps; link_config ;;
+    deps) check_location; install_deps ;;
     *)    err "no command given"; exit 2 ;;
   esac
 }
